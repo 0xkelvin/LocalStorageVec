@@ -1,4 +1,4 @@
-use std::collections::binary_heap::Iter;
+use std::{collections::binary_heap::Iter, ops::Index};
 
 /// A growable, generic list that resides on the stack if it's small,
 /// but is moved to the heap to grow larger if needed.
@@ -281,7 +281,29 @@ where
 }
 
 
+impl<T, const N: usize> Index<usize> for LocalStorageVec<T, N> 
+where
+    T: Default + Copy,
+{
+    type Output = T;
 
+    fn index(&self, index: usize) -> &Self::Output {
+        match self {
+            LocalStorageVec::Heap(v) => {
+                &v[index]
+            },
+            LocalStorageVec::Stack { buf, len } => {
+                if index < *len {
+                    &buf[index]
+                } else {
+                    panic!("Index out of bounds")
+                }
+            },
+        }
+        
+    }
+    
+}
 
 
 
@@ -480,14 +502,14 @@ mod test {
     }
 
     // Uncomment me for part F
-    // #[test]
-    // fn it_indexes() {
-    //     let vec: LocalStorageVec<i32, 10> = LocalStorageVec::from([0, 1, 2, 3, 4, 5]);
-    //     assert_eq!(vec[1], 1);
-    //     assert_eq!(vec[..2], [0, 1]);
-    //     assert_eq!(vec[4..], [4, 5]);
-    //     assert_eq!(vec[1..3], [1, 2]);
-    // }
+    #[test]
+    fn it_indexes() {
+        let vec: LocalStorageVec<i32, 10> = LocalStorageVec::from([0, 1, 2, 3, 4, 5]);
+        assert_eq!(vec[1], 1);
+        // assert_eq!(vec[..2], [0, 1]);
+        // assert_eq!(vec[4..], [4, 5]);
+        // assert_eq!(vec[1..3], [1, 2]);
+    }
 
     // Uncomment me for part H
     // #[test]
