@@ -1,4 +1,4 @@
-use std::{collections::binary_heap::Iter, ops::{Index, RangeTo}};
+use std::{collections::binary_heap::Iter, ops::{Index, RangeTo, RangeFrom}};
 
 /// A growable, generic list that resides on the stack if it's small,
 /// but is moved to the heap to grow larger if needed.
@@ -323,6 +323,23 @@ impl<T, const N: usize> Index<RangeTo<usize>> for LocalStorageVec<T, N> {
     }
 }
 
+impl<T, const N: usize> Index<RangeFrom<usize>> for LocalStorageVec<T, N> {
+    type Output = [T];
+
+    fn index(&self, index: RangeFrom<usize>) -> &Self::Output {
+        let len = match self {
+            LocalStorageVec::Heap(v) => v.len(),
+            LocalStorageVec::Stack { buf, len } => *len,
+        };
+        
+        if index.start < len {
+            &self.as_ref()[index.start..]
+        } else {
+            panic!("Index out of bounds")
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod test {
@@ -523,7 +540,7 @@ mod test {
         let vec: LocalStorageVec<i32, 10> = LocalStorageVec::from([0, 1, 2, 3, 4, 5]);
         assert_eq!(vec[1], 1);
         assert_eq!(vec[..2], [0, 1]);
-        // assert_eq!(vec[4..], [4, 5]);
+        assert_eq!(vec[4..], [4, 5]);
         // assert_eq!(vec[1..3], [1, 2]);
     }
 
